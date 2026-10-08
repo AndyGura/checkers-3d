@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://github.com/dfinity/icp-cli/raw/refs/tags/v0.1.0-beta.2/docs/schemas/icp-yaml-schema.json
+#
+# `backend` is NOT ours: it is the live Checkers backend's own module
+# (downloaded from https://ejfxb-wqaaa-aaaac-qhekq-cai.raw.icp0.io/wasm), declared
+# here only so a local `icp deploy` runs a private copy to test against.
+# On mainnet it is linked to the live canister (`icp canister link backend
+# ejfxb-wqaaa-aaaac-qhekq-cai -e ic`), so only `frontend` is ever deployed there.
+
+canisters:
+  - name: backend
+    recipe:
+      type: "@dfinity/prebuilt@v2.1.0"
+      configuration:
+        path: backend.wasm
+        sha256: 95dc506d7fad99a6ebde758ba44cf2c4fa6431f5d6bb5dc27241121488236c35
+  - name: frontend
+    recipe:
+      type: "@dfinity/static-site@v0.4.0"
+      configuration:
+        dir: frontend/dist
+        build:
+          - cd frontend && npm run build

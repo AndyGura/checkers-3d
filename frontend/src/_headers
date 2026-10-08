@@ -1,0 +1,13 @@
+# Served by the asset canister with every file. Everything (three.js,
+# @icp-sdk/*, the vendored duel-game-core client) is bundled into app.js,
+# so script-src needs no CDN. connect-src allows the IC API hosts: the
+# live backend is reached through https://icp0.io; localhost covers the
+# local replica during development. `upgrade-insecure-requests` is left
+# out because the local network is plain http.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://ic0.app https://*.ic0.app https://icp0.io https://*.icp0.io https://icp-api.io http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none';
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin

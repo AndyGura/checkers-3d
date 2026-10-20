@@ -8,13 +8,13 @@
 import { Actor, HttpAgent } from "@icp-sdk/core/agent";
 import { safeGetCanisterEnv } from "@icp-sdk/core/agent/canister-env";
 import { Principal } from "@icp-sdk/core/principal";
-import { makeIdlFactory, buildBotPlayIdlFactory } from "./duel-game-core/idl.js";
-import { start } from "./duel-game-core/app.js";
-import { connectTransport } from "./duel-game-core/transport.js";
-import { regenerateAnonymousIdentity, resolveAnonymousIdentity } from "./duel-game-core/anon-identity.js";
-import { deriveHost } from "./duel-game-core/ic-env.js";
-import { oppSeatOf, viewOf, viewTagOf, withLocalMove } from "./duel-game-core/client.js";
-import { debriefVerdict, errText, esc, renderBotList, renderLeaderboard, renderSeatChoice, tag } from "./duel-game-core/render.js";
+import { makeIdlFactory, buildBotPlayIdlFactory } from "@research-ag/duel-game-core/idl.js";
+import { start } from "@research-ag/duel-game-core/app.js";
+import { connectTransport } from "@research-ag/duel-game-core/transport.js";
+import { regenerateAnonymousIdentity, resolveAnonymousIdentity } from "@research-ag/duel-game-core/anon-identity.js";
+import { deriveHost } from "@research-ag/duel-game-core/ic-env.js";
+import { oppSeatOf, viewOf, viewTagOf, withLocalMove } from "@research-ag/duel-game-core/client.js";
+import { debriefVerdict, errText, esc, renderBotList, renderLeaderboard, renderSeatChoice, tag } from "@research-ag/duel-game-core/render.js";
 import { plugin } from "./checkers-plugin.js";
 import { tagsOf } from "./checkers-rules.js";
 import { screens } from "./screens.js";
@@ -54,9 +54,9 @@ const agent = await HttpAgent.create({
   ...(live ? {} : { rootKey: env?.IC_ROOT_KEY }),
 });
 const actor = Actor.createActor(makeIdlFactory(plugin.idlTypes), { agent, canisterId });
-const ws = connectTransport({ actor, gameIdlTypes: plugin.idlTypes });
+const transport = connectTransport({ actor, gameIdlTypes: plugin.idlTypes });
 
-const client = start({ plugin, ws, session, screens });
+const client = start({ plugin, transport, session, screens });
 document.getElementById("backend-id").textContent = canisterId;
 
 // ── The 3D table ──────────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ async function inviteBot(seat) {
   try {
     let staging = stagingOf(client.getState().status);
     if (!staging) {
-      const res = await client.createTable(seat, { open: null }, "");
+      const res = await client.createTable(seat, { open: null }, {});
       if (!res.ok) throw new Error(res.message ?? "Could not open a table.");
       staging = stagingOf(res.view);
       if (!staging) throw new Error("Could not open a table.");

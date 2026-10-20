@@ -2,7 +2,7 @@
 
 A 3D browser frontend for the live **Checkers** game on the Internet
 Computer (<https://eag45-ayaaa-aaaac-qhela-cai.icp.net>), built on
-[duel-game-core](https://github.com/research-ag/duel-core).
+[`@research-ag/duel-game-core`](https://www.npmjs.com/package/@research-ag/duel-game-core).
 
 This project has **no backend of its own**. It talks to the game's
 existing backend canister, `ejfxb-wqaaa-aaaac-qhekq-cai`, so players here
@@ -25,7 +25,7 @@ and players on the original page sit at the same tables.
 
 ```
 icp.yaml                  backend = the live game's own wasm (local testing only), frontend = this site
-backend.wasm              downloaded from https://ejfxb-wqaaa-aaaac-qhekq-cai.raw.icp0.io/wasm (sha256 pinned in icp.yaml)
+backend.wasm              the live canister's module, from https://api.hosty.live/modules/<module_hash> (sha256 pinned in icp.yaml)
 backend.did               the backend's Candid (icp canister metadata … candid:service)
 .icp/data/mappings/ic.ids.json   "backend" -> the live id, for the ic environment
 frontend/
@@ -35,7 +35,6 @@ frontend/
   src/checkers-rules.js   cosmetic mirror of the rules (legal targets, applyLocal, last-move diff)
   src/screens.js          HUD versions of every shell screen
   src/scene/              the 3D table (board, pieces, effects, tweens, controller)
-  src/duel-game-core/     duel-game-core's frontend/src/*.ts, copied unchanged (not on npm)
   src/_headers            CSP and other headers served by the asset canister
 ```
 
@@ -90,8 +89,9 @@ with your own title, description and banner.
 
 ## Development notes
 
-- `cd frontend && npm run typecheck` type-checks the vendored duel-game-core
-  sources; `npm run build` bundles.
+- The client (transport, shell, default screens) is the
+  `@research-ag/duel-game-core` npm package; `cd frontend && npm run build`
+  bundles it with everything else.
 - In the browser console, `checkers.scene` and `checkers.client` are
   exposed for debugging. `checkers.scene.pump(seconds)` steps the animation
   clock by hand, for a tab the browser keeps hidden (where

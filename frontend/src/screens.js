@@ -17,8 +17,8 @@ import {
   idleWarningThreshold,
   truncatePlayerId,
   waitingText,
-} from "./duel-game-core/render.js";
-import { claimRoleOf, oppSeatOf, tag } from "./duel-game-core/client.js";
+} from "@research-ag/duel-game-core/render.js";
+import { claimRoleOf, oppSeatOf, tag } from "@research-ag/duel-game-core/client.js";
 
 const chip = (seat) => `<span class="chip chip-${seat}"></span>`;
 
@@ -167,7 +167,7 @@ export const screens = {
     }
     return `
       <div class="turn-banner ${myTurn ? `mine turn-${me}` : `theirs turn-${opp}`}">
-        <span class="move-no">Move ${v.turn + 1n}</span>
+        <span class="move-no">Move ${v.step + 1n}</span>
         <strong>${myTurn ? "Your move" : `${esc(plugin.seatLabel(opp))} is thinking…`}</strong>
       </div>
       <div class="game-bottom">
@@ -191,7 +191,7 @@ export const screens = {
     return `
       <div class="verdict-wrap">
         <h2 class="verdict ${outcome}" data-text="${word}">${word}</h2>
-        <p class="verdict-sub">${esc(title)} · ${v.turns} move${v.turns === 1n ? "" : "s"}</p>
+        <p class="verdict-sub">${esc(title)} · ${v.steps} move${v.steps === 1n ? "" : "s"}</p>
       </div>
       <div class="game-bottom">
         ${plugin.renderBoard(v.finalGame, me, opp)}

@@ -1,6 +1,6 @@
 // The 3D table. `show()` is handed every board that reaches the screen, in
 // order; the scene works out what happened between the board it is
-// showing and the new one (the move, from a diff of the two, since State
+// showing and the new one (the move, from a diff of the two, since View
 // carries no history) and plays it: a slide for a step, an arcing flip
 // over each captured piece for a jump, the captured pieces burning away
 // into embers, a crown forging onto a promoted man. The squares of the

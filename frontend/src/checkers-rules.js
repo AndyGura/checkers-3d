@@ -193,7 +193,7 @@ export function boardOf(tags) {
 /// differ any other way (a new game, a missed view, a rejected move put
 /// back). `{ mover, tag, from, to, path, captured: [{ sq, tag }],
 /// promoted }`, `path` being every square the piece stands on in order.
-/// State carries no history, so this is how the opponent's last move is
+/// View carries no history, so this is how the opponent's last move is
 /// found (/semantics, CLIENT NOTES).
 export function inferMove(before, after) {
   if (!before || !after || before.length !== after.length) return null;

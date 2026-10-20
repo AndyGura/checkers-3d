@@ -1,6 +1,5 @@
-// Bundle src/app.js (the 3D scene, the checkers plugin, the vendored
-// duel-game-core sources under src/duel-game-core/, three.js and
-// @icp-sdk/*) into dist/app.js, then copy the static assets. icp.yaml
+// Bundle src/app.js (the 3D scene, the checkers plugin,
+// @research-ag/duel-game-core, three.js and @icp-sdk/*) into dist/app.js, then copy the static assets. icp.yaml
 // deploys dist/ only.
 import * as esbuild from 'esbuild';
 import { cpSync, mkdirSync, rmSync } from 'node:fs';

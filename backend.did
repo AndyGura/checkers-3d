@@ -1,24 +1,39 @@
 type View = 
+ record {
+   board: Board;
+   toMove: Seat;
+ };
+type Verdict = 
+ variant {
+   draw;
+   p1Wins;
+   p2Wins;
+ };
+type TableVisibility = 
+ variant {
+   code: text;
+   open;
+ };
+type TableView = 
  variant {
    awaitingRematch: record {
                       gen: nat;
                       openSeat: Seat;
                     };
    busy: record {secondsUntilTakeover: nat;};
-   debrief:
-    record {
-      end: End;
-      finalGame: State;
-      gen: nat;
-      seat: Seat;
-      turns: nat;
-    };
+   debrief: record {
+              end: End;
+              finalGame: View;
+              gen: nat;
+              seat: Seat;
+              steps: nat;
+            };
    endedByOther;
    inGame:
     record {
       claimTimeoutSecs: nat;
       claimWinAvailable: bool;
-      game: State;
+      game: View;
       gen: nat;
       idleTimeoutSecs: nat;
       mode: Mode;
@@ -26,7 +41,8 @@ type View =
       seat: Seat;
       secondsUntilClaimable: nat;
       secondsUntilIdleReset: nat;
-      turn: nat;
+      step: nat;
+      toMove: opt Seat;
       youSubmitted: bool;
     };
    lobby: record {
@@ -42,53 +58,29 @@ type View =
       visibility: TableVisibility;
     };
  };
-type Verdict = 
- variant {
-   draw;
-   p1Wins;
-   p2Wins;
- };
-type TableVisibility = 
- variant {
-   code: text;
-   open;
- };
 type TableSummary = 
  record {
    id: TableId;
+   options: Options;
    p1Open: bool;
-   p1Session: opt SessionId;
+   p1Session: opt PlayerId;
    p2Open: bool;
-   p2Session: opt SessionId;
+   p2Session: opt PlayerId;
    protected: bool;
-   "variant": text;
    waitingSecs: nat;
  };
-type TableId = nat;
-type StreamingToken = record {index: nat;};
-type StreamingStrategy = variant {
-                           Callback:
-                            record {
-                              callback: StreamingCallback;
-                              token: StreamingToken;
-                            };};
-type StreamingCallbackResponse = 
- record {
-   body: blob;
-   token: opt StreamingToken;
- };
-type StreamingCallback = func (StreamingToken) ->
-                          (StreamingCallbackResponse) query;
-type State = record {board: Board;};
-type SessionStatus = 
+type TableResult = 
  variant {
-   atTable: record {
-              id: TableId;
-              view: View;
-            };
-   browsing: record {tables: vec TableSummary;};
+   changed: Snapshot;
+   gone;
+   unchanged;
  };
-type SessionId = text;
+type TableId = nat;
+type Snapshot = 
+ record {
+   rev: nat;
+   view: TableView;
+ };
 type Seat = 
  variant {
    p1;
@@ -102,12 +94,6 @@ type Response =
                   text;
                 };
    status_code: nat16;
-   streaming_strategy: opt StreamingStrategy;
- };
-type Res_2 = 
- variant {
-   err: Err;
-   ok: TableId;
  };
 type Res_1 = 
  variant {
@@ -129,13 +115,13 @@ type Request =
    method: text;
    url: text;
  };
-type Principal = principal;
-type PollResult = 
+type Reply = 
  variant {
-   changed: blob;
-   unchanged;
-   unknown;
+   err: Err;
+   view: Snapshot;
  };
+type Principal = principal;
+type PlayerId = text;
 type Piece = 
  variant {
    kingP1;
@@ -143,10 +129,20 @@ type Piece =
    manP1;
    manP2;
  };
+type Options = record {};
 type Mode = 
  variant {
-   alternating;
    simultaneous;
+   turnBased;
+ };
+type LobbyResult = 
+ variant {
+   changed: record {
+              rev: nat;
+              tables: vec TableSummary;
+              yours: vec TableId;
+            };
+   unchanged;
  };
 type JoinOk = 
  variant {
@@ -157,6 +153,7 @@ type Err =
  variant {
    alreadySubmitted;
    badCode;
+   badOptions: text;
    illegalMove: text;
    noSuchTable;
    notIdle: record {secondsLeft: nat;};
@@ -166,6 +163,7 @@ type Err =
    "reserved": record {secondsLeft: nat;};
    seatTaken;
    stale;
+   tooManyTables: record {max: nat;};
    unauthorized;
    wrongPhase: text;
  };
@@ -193,27 +191,46 @@ type BotComplexityEntry =
    elo: opt int;
  };
 type Board = vec opt Piece;
+type Action = 
+ variant {
+   jump: record {path: vec nat;};
+   move: record {
+           from: nat;
+           to: nat;
+         };
+ };
+type Ack = 
+ variant {
+   err: Err;
+   ok: record {
+         rev: nat;
+         tableId: TableId;
+       };
+ };
 service : {
   ack_ended_as_canister: (tableId: TableId) -> ();
   claim_win_as_canister: (tableId: TableId, gen: nat) -> (Res);
-  create_table_as_canister: (seat: Seat, visibility: TableVisibility,
-   "variant": text, complexity: text) -> (Res_2);
-  duel_poll: (sid: text, rev: nat) -> (PollResult) query;
-  duel_request: (msg: blob) -> (blob);
+  duel_ack_ended: (tableId: TableId) -> (Ack);
+  duel_claim_win: (tableId: TableId, gen: nat) -> (Ack);
+  duel_create_table: (seat: Seat, visibility: TableVisibility, options:
+   Options) -> (Ack);
+  duel_join_table: (tableId: TableId, seat: Seat, code: opt text) -> (Ack);
+  duel_keep_alive: () -> (Res);
+  duel_leave: (tableId: TableId, gen: nat) -> (Ack);
+  duel_lobby: (rev: nat) -> (LobbyResult) query;
+  duel_rematch: (tableId: TableId) -> (Ack);
+  duel_reset: (tableId: TableId, gen: nat) -> (Ack);
+  duel_submit: (tableId: TableId, gen: nat, step: nat, action: Action) ->
+   (Reply);
+  duel_table: (tableId: TableId, rev: nat) -> (TableResult) query;
   get_leaderboard: () -> (vec Entry) query;
   http_request: (req: Request) -> (Response) query;
-  http_request_streaming_callback: (token: StreamingToken) ->
-   (StreamingCallbackResponse) query;
   join_table_as_canister: (id: TableId, seat: Seat, code: opt text,
    complexity: text) -> (Res_1);
   leave_as_canister: (tableId: TableId, gen: nat) -> (Res);
   list_bots: () -> (vec BotEntry) query;
   register_bot: (name: text, complexities: vec text) -> ();
   reset_as_canister: (tableId: TableId, gen: nat) -> (Res);
-  status: (sid: text) -> (SessionStatus) query;
   unregister_bot: () -> ();
-  wasm_upload_begin: () -> ();
-  wasm_upload_chunk: (chunk: blob) -> ();
-  wasm_upload_commit: (size: nat) -> ();
 }
 
